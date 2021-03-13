@@ -24,7 +24,7 @@ let HitBtcApiNodeSdk = (() => {
     };
 
     let updateRequestOptions = (path, options) => {
-        let request_options = default_request_options;
+        let request_options = JSON.parse(JSON.stringify(default_request_options));
         request_options.uri = conf.rest_base_url + path;
         if (options) {
             Object.keys(options).forEach(key => {
@@ -41,6 +41,23 @@ let HitBtcApiNodeSdk = (() => {
     let makeRequest = (uri, options_template = null) => {
         return request(updateRequestOptions(uri, options_template))
     };
+
+    let checkVolume = (symbol, volume) => {
+        let rem=volume % symbol.quantityIncrement;
+        if (rem<symbol.quantityIncrement) {
+            rem=0;
+        }
+        return volume - rem;
+    }
+
+    let checkPrice = (symbol, price) => {
+        let rem=price % symbol.tickSize;
+        if (rem<symbol.tickSize) {
+            rem=0;
+        }
+        return price - rem;
+    }
+
 
     return {
         configuration: (params) => {
@@ -150,6 +167,25 @@ let HitBtcApiNodeSdk = (() => {
         getActiveOrderByClientOrderId: (client_order_id, params = '') => {
             path = '/order/' + client_order_id;
             return makeRequest(path, {qs: params})
+        },
+
+        /**
+         * Prepare Order Data in required format, corrects values to
+         * match required settings from symbol
+         * @see https://api.hitbtc.com/#create-new-order
+         * @param {object} symbol as returned by symbols function
+         * @param {float} volume
+         * @param {float} price
+         * @param {string} direction: sell or buy
+         * @return {object} Order Data
+         */
+        createOrderData: (symbol, volume, price, direction) => {
+            return {
+                symbol: symbol.id,
+                side: direction,
+                quantity: checkVolume(symbol, volume),
+                price: checkPrice(symbol, price),
+            };
         },
 
         /**
