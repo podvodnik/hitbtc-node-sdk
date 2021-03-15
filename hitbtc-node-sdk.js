@@ -177,12 +177,14 @@ let HitBtcApiNodeSdk = (() => {
          * @param {float} volume
          * @param {float} price
          * @param {string} direction: sell or buy
+         * @param {string} type: limit, market
          * @return {object} Order Data
          */
-        createOrderData: (symbol, volume, price, direction) => {
+        createOrderData: (symbol, volume, price, direction, type = "limit") => {
             return {
                 symbol: symbol.id,
                 side: direction,
+                type: type,
                 quantity: checkVolume(symbol, volume),
                 price: checkPrice(symbol, price),
             };
